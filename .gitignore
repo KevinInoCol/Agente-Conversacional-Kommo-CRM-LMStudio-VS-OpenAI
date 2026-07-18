@@ -1,0 +1,28 @@
+# ─── Secretos y credenciales (NUNCA subir) ───
+.env
+.env.*
+!.env.example
+credentials/
+*.json
+!.vscode/*.json
+service_account*.json
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.Python
+build/
+dist/
+.venv/
+venv/
+env/
+
+# ─── Sistema / editor ───
+.DS_Store
+.vscode/
+.idea/
+
+# ─── Logs ───
+*.log

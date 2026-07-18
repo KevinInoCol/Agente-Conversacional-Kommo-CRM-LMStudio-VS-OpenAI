@@ -1,0 +1,46 @@
+meta:
+  name: kommo-agent-llm
+  version: 1.0.0
+  description: Configuración del LLM y memoria del agente vendedor (Andrea) integrado con Kommo CRM.
+  updated_at: 2026-05-25
+  author: kinofuente@ariaia.com
+
+llm:
+  # Proveedor activo por defecto. Se puede sobreescribir con la variable de
+  # entorno LLM_PROVIDER (env gana sobre yaml). Valores: "openai" | "lmstudio".
+  provider: openai
+
+  # Temperatura compartida por ambos proveedores.
+  temperature: 0
+  # max_tokens: null
+  # top_p: 1
+  # timeout: 60
+
+  # ── OpenAI (nube) ─────────────────────────────────────────────
+  openai:
+    model: gpt-4.1
+    # La API key viene de OPENAI_API_KEY en el .env.
+
+  # ── LM Studio (local, API compatible con OpenAI) ──────────────
+  # model / base_url se pueden sobreescribir desde el .env con
+  # LMSTUDIO_MODEL y LMSTUDIO_BASE_URL. La api_key (LMSTUDIO_API_KEY) es un
+  # placeholder: LM Studio no la valida, pero LangChain exige que exista.
+  lmstudio:
+    model: qwen/qwen3-8b
+    base_url: http://localhost:1234/v1
+    # Qwen3 y otros modelos "reasoning" emiten bloques <think>...</think>.
+    # Si es true, se limpian de la respuesta final antes de enviarla al cliente.
+    strip_thinking: true
+
+memory:
+  # Memoria persistente en PostgreSQL (Supabase) vía el checkpointer de LangGraph
+  # (PostgresSaver). La conexión se construye desde DB_USER, DB_PASSWORD, DB_HOST,
+  # DB_PORT, DB_NAME, DB_SSLMODE del .env. La key por conversación es el lead_id
+  # (se pasa como thread_id al invocar el agente).
+  #
+  # NOTA: con el checkpointer, PostgresSaver gestiona sus propias tablas, por lo
+  # que `table_name` ya no se usa. `token_limit` tampoco se aplica todavía: para
+  # acotar el historial habría que añadir un middleware de trimming/summarization
+  # (ver docs.langchain.com/oss/python/langchain/short-term-memory).
+  token_limit: 3000
+  table_name: kommo_chat_history
