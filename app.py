@@ -5,6 +5,11 @@ Recibe webhooks de Kommo, construye un agente LangChain específico para el lead
 ejecuta el agente con memoria persistente y deja que el LLM decida cuándo
 invocar las tools de Kommo (mover etapa, actualizar custom fields). Luego
 guarda la respuesta limpia en el lead y dispara el salesbot.
+
+El cliente puede escribir o mandar una nota de voz: si el webhook trae un
+adjunto de audio, `procesamiento_de_audio` lo descarga y lo transcribe con
+Whisper, y la transcripción entra al agente como si el cliente la hubiera
+escrito. La respuesta del agente siempre sale en texto.
 """
 
 import os
@@ -60,6 +65,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "Kommo Functions"))
 from kommo import parse_kommo_webhook, update_lead_with_response, launch_salesbot, get_switch_status
 
 from agent import init_resources, build_agent_for_lead, clean_agent_response
+from procesamiento_de_audio import (
+    MENSAJE_ERROR_AUDIO,
+    TranscripcionFallida,
+    es_mensaje_de_audio,
+    obtener_texto_de_entrada,
+)
 
 BOT_NAME = os.getenv("BOT_NAME", "Andrea")
 
@@ -90,15 +101,38 @@ def is_duplicate(lead_id: str, text: str) -> bool:
     return False
 
 
-async def process_message(message_text: str, lead_id: str):
+def enviar_respuesta(lead_id: str, texto: str):
+    """Guarda el texto en el custom field del lead y dispara el Salesbot."""
+    update_lead_with_response(lead_id, texto)
+    print(f"✅ Lead {lead_id} actualizado: respuesta guardada + switch activado")
+    launch_salesbot(lead_id)
+
+
+async def process_message(data: dict, lead_id: str):
     """
     Procesa el mensaje en segundo plano:
-    1. Agente (create_agent) con tools enlazadas al lead_id.
-    2. agent.invoke() con thread_id=lead_id — la memoria persistente la maneja el
+    1. Resuelve el texto de entrada: lo escrito por el cliente o, si mandó una
+       nota de voz, su transcripción con Whisper (`obtener_texto_de_entrada`).
+       Se hace aquí y no en el handler para no bloquear la respuesta al webhook.
+    2. Agente (create_agent) con tools enlazadas al lead_id.
+    3. agent.invoke() con thread_id=lead_id — la memoria persistente la maneja el
        checkpointer de Postgres; el LLM decide qué tools invocar.
-    3. Guarda respuesta final en Kommo + lanza salesbot.
+    4. Guarda respuesta final en Kommo + lanza salesbot.
     """
     try:
+        try:
+            message_text = obtener_texto_de_entrada(data)
+        except TranscripcionFallida as e:
+            # El audio no se pudo convertir a texto: no hay query para el agente.
+            # Se responde con un mensaje de cortesía y se corta el flujo.
+            print(f"❌ Audio no transcrito (lead {lead_id}): {e}")
+            enviar_respuesta(lead_id, MENSAJE_ERROR_AUDIO)
+            return
+
+        if not message_text:
+            print(f"⏭️ Mensaje sin texto tras el procesamiento (lead {lead_id})")
+            return
+
         agent = build_agent_for_lead(int(lead_id))
 
         # thread_id aísla la conversación de cada lead (memoria por lead).
@@ -113,10 +147,7 @@ async def process_message(message_text: str, lead_id: str):
 
         print(f"🤖 Respuesta: {response_text[:80]}...")
 
-        update_lead_with_response(lead_id, response_text)
-        print(f"✅ Lead {lead_id} actualizado: respuesta guardada + switch activado")
-
-        launch_salesbot(lead_id)
+        enviar_respuesta(lead_id, response_text)
 
     except Exception as e:
         print(f"❌ Error procesando mensaje: {str(e)}")
@@ -144,13 +175,20 @@ async def kommo_webhook(request: Request, background_tasks: BackgroundTasks):
     if created_by and str(created_by) != "0":
         return {"status": "ignored", "reason": "system message"}
 
-    if not message_text or not lead_id:
-        return {"status": "ignored", "reason": "missing data"}
+    # Una nota de voz llega SIN texto (o con el nombre del archivo): se acepta
+    # igual y la transcripción se resuelve dentro de process_message.
+    hay_audio = es_mensaje_de_audio(data)
 
-    if len(message_text.strip()) < 1:
+    if not lead_id:
+        return {"status": "ignored", "reason": "missing lead_id"}
+
+    if not (message_text and message_text.strip()) and not hay_audio:
         return {"status": "ignored", "reason": "empty message"}
 
-    if is_duplicate(lead_id, message_text):
+    # Para audio, la huella del dedupe es el link del adjunto (el texto va vacío).
+    huella = message_text or (data.get("attachment") or {}).get("link", "")
+
+    if is_duplicate(lead_id, huella):
         print(f"⏭️ Webhook duplicado ignorado (lead {lead_id})")
         return {"status": "ignored", "reason": "duplicate webhook"}
 
@@ -159,9 +197,12 @@ async def kommo_webhook(request: Request, background_tasks: BackgroundTasks):
         return {"status": "ignored", "reason": "AI switch off"}
 
     print(f"📩 Webhook recibido de Kommo!")
-    print(f"💬 Mensaje: '{message_text[:50]}...' | Lead ID: {lead_id}")
+    if hay_audio:
+        print(f"🎤 Nota de voz recibida | Lead ID: {lead_id}")
+    else:
+        print(f"💬 Mensaje: '{message_text[:50]}...' | Lead ID: {lead_id}")
 
-    background_tasks.add_task(process_message, message_text, lead_id)
+    background_tasks.add_task(process_message, data, lead_id)
 
     return {"status": "ok", "message": "processing"}
 

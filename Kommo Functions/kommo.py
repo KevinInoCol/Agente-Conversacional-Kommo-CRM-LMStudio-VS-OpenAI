@@ -3,24 +3,66 @@ import requests
 from urllib.parse import parse_qs
 
 
+PREFIJO_MENSAJE = "message[add][0]"
+
+
 def parse_kommo_webhook(body: bytes) -> dict:
-    """Parsea el webhook de Kommo (form-urlencoded)"""
+    """
+    Parsea el webhook de Kommo (form-urlencoded).
+
+    Además de los campos del mensaje, extrae el bloque `attachment` (link, tipo
+    y nombre de archivo) que Kommo manda cuando el cliente envía una nota de voz
+    o un archivo. El audio NO viaja en el webhook: viene un link al CDN, que es
+    lo que descarga y transcribe `procesamiento_de_audio`.
+
+    Se guarda también `raw` (el dict crudo de parse_qs) para poder depurar
+    payloads de canales que nombran los campos de forma distinta.
+    """
     parsed = parse_qs(body.decode('utf-8'))
-    
+
     def get_value(key):
         values = parsed.get(key, [None])
         return values[0] if values else None
-    
+
+    plano = {k: v[0] for k, v in parsed.items() if v}
+
     return {
-        "text": get_value("message[add][0][text]"),
-        "chat_id": get_value("message[add][0][chat_id]"),
-        "lead_id": get_value("message[add][0][element_id]"),
-        "entity_type": get_value("message[add][0][entity_type]"),
-        "type": get_value("message[add][0][type]"),  # incoming/outgoing
-        "created_by": get_value("message[add][0][created_by]"),  # 0 = cliente
-        "author_id": get_value("message[add][0][author][id]"),
-        "author_type": get_value("message[add][0][author][type]"),  # contact/user
+        "text": get_value(f"{PREFIJO_MENSAJE}[text]"),
+        "chat_id": get_value(f"{PREFIJO_MENSAJE}[chat_id]"),
+        "lead_id": get_value(f"{PREFIJO_MENSAJE}[element_id]"),
+        "entity_type": get_value(f"{PREFIJO_MENSAJE}[entity_type]"),
+        "type": get_value(f"{PREFIJO_MENSAJE}[type]"),  # incoming/outgoing
+        "created_by": get_value(f"{PREFIJO_MENSAJE}[created_by]"),  # 0 = cliente
+        "author_id": get_value(f"{PREFIJO_MENSAJE}[author][id]"),
+        "author_type": get_value(f"{PREFIJO_MENSAJE}[author][type]"),  # contact/user
+        "attachment": _parse_attachment(parsed, get_value),
+        "raw": plano,
     }
+
+
+def _parse_attachment(parsed: dict, get_value) -> dict:
+    """
+    Extrae el adjunto del webhook: {"type", "link", "file_name", "file_size"}.
+
+    Fallback: si Kommo (o el canal) usa una clave distinta a la documentada, se
+    barre el payload buscando cualquier clave que contenga "attachment" + "link"
+    o "url", para no perder el audio por un cambio de nombre en el campo.
+    """
+    adjunto = {
+        "type": get_value(f"{PREFIJO_MENSAJE}[attachment][type]"),
+        "link": get_value(f"{PREFIJO_MENSAJE}[attachment][link]"),
+        "file_name": get_value(f"{PREFIJO_MENSAJE}[attachment][file_name]"),
+        "file_size": get_value(f"{PREFIJO_MENSAJE}[attachment][file_size]"),
+    }
+
+    if not adjunto["link"]:
+        for clave, valores in parsed.items():
+            clave_baja = clave.lower()
+            if "attachment" in clave_baja and ("link" in clave_baja or "url" in clave_baja):
+                adjunto["link"] = valores[0] if valores else None
+                break
+
+    return {k: v for k, v in adjunto.items() if v}
 
 
 def get_switch_status(lead_id: int) -> bool:

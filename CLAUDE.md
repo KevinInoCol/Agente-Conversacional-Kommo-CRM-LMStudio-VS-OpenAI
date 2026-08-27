@@ -15,10 +15,12 @@ con `FunctionAgent` de LlamaIndex.
 ```
 Cliente (WhatsApp/canal) ─► Kommo ─► POST /webhook/kommo (app.py)
    │
-   ├─ parse_kommo_webhook  (form-urlencoded → dict)
-   ├─ filtros: outgoing / created_by!=0 / sin texto / duplicado(5min) / switch IA off
-   └─ BackgroundTask process_message(text, lead_id)
+   ├─ parse_kommo_webhook  (form-urlencoded → dict, incl. attachment)
+   ├─ filtros: outgoing / created_by!=0 / sin texto ni audio / duplicado(5min) / switch IA off
+   └─ BackgroundTask process_message(data, lead_id)
           │
+          ├─ obtener_texto_de_entrada(data)  → texto tal cual, o si es nota de voz:
+          │     descarga del CDN de Kommo → Whisper (whisper-1) → transcripción
           ├─ get_memory_for_user(lead_id)   → ChatMemoryBuffer (Postgres)
           ├─ build_agent_for_lead(lead_id)  → FunctionAgent + 6 tools (closure sobre lead_id)
           ├─ agent.run(message, memory=…)   → LLM decide qué tools invocar
@@ -38,6 +40,7 @@ Cliente (WhatsApp/canal) ─► Kommo ─► POST /webhook/kommo (app.py)
 | `tools/move_lead_to_*.py` | 3 tools de etapa (Lead Interesado / Lead Calificado / Cerrar Venta). |
 | `tools/update_data_*.py` | 2 tools de custom fields (Marca de Interés, Método de Pago). |
 | `tools/Tarea-send_notification_by_*.py` | Notificaciones (email / WhatsApp API). |
+| `procesamiento_de_audio/` | Nota de voz → texto. `procesador.py` (entrypoint), `descarga_audio.py` (CDN → temporal), `transcriptor.py` (Whisper). |
 | `chat_history/postgres_store.py` | `PostgresChatStore` compartido + `ChatMemoryBuffer` por lead. |
 | `prompt/system_prompt.yaml` | System prompt v2.0 (identidad + 8 intenciones + flujos + reglas de tools). |
 | `model_config/model.yaml` | Modelo, temperatura, `token_limit` y `table_name` de memoria. |
@@ -52,6 +55,11 @@ Cliente (WhatsApp/canal) ─► Kommo ─► POST /webhook/kommo (app.py)
 - **El nombre del bot** se inyecta vía env `BOT_NAME` (default `Andrea`) y se sustituye en `system_prompt.yaml` con un `.replace("{bot_name}", …)`.
 - **Las 3 tools de etapa son mutuamente excluyentes** por turno (regla del prompt). Las 2 de update sí pueden acompañar a una de etapa.
 - **El cliente no debe enterarse de las tools ni de la memoria/RAG** — son invisibles.
+- **Entrada mixta, salida siempre texto**: el cliente puede escribir o mandar una nota de
+  voz; `obtener_texto_de_entrada(data)` normaliza ambos casos a una sola query. El agente
+  nunca ve audio y no sintetiza voz — responde en texto vía el Salesbot.
+- **La transcripción usa siempre la API de OpenAI** (`whisper-1`), incluso con
+  `LLM_PROVIDER=lmstudio`: es un servicio aparte, así que `OPENAI_API_KEY` es obligatoria.
 
 ## Variables de entorno requeridas (`.env`)
 
@@ -83,6 +91,9 @@ ngrok http 8000
 
 # Reindexar el catálogo en LlamaCloud
 python RAG/rag.py
+
+# Probar la transcripción de un audio (archivo local o URL)
+python procesamiento_de_audio/transcriptor.py ruta/al/audio.ogg
 
 # Consultar metadatos de Kommo para poblar .env
 python support_tools/get_pipelines.py
