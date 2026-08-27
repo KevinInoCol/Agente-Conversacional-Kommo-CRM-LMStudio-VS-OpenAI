@@ -1,10 +1,13 @@
-# Para generar el entorno virtual
+# Paso 1: Para generar el entorno virtual
 conda create --name LangChain-LlamaIndex-Kommo python=3.11
 
-# Para activar el entorno virtual
+# Paso 2: Para activar el entorno virtual
 conda activate LangChain-LlamaIndex-Kommo
 
-# Con este levantamos el endpoint
+# Paso 3: Instalamos las dependencias
+pip install -r requirements.txt
+
+# Paso 4: Con este levantamos el endpoint
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
 
 
