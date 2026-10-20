@@ -1,7 +1,7 @@
 """
 Tool para mover un lead a la etapa "Cerrar Venta" en Kommo.
-Se activa cuando el cliente confirma que va a pagar de forma inminente:
-"voy a pagar ahora", "en 5 min envío la transferencia/comprobante".
+Se activa cuando el cliente confirma que avanza: agenda una visita en firme,
+se compromete a enviar la documentación o pide reservar el inmueble.
 Usa el endpoint PATCH /api/v4/leads/{id}
 Docs: https://developers.kommo.com/reference/updating-single-lead
 """
@@ -13,7 +13,7 @@ from langchain.tools import tool
 
 def move_lead_to_Cerrar_Venta(lead_id: int) -> bool:
     """
-    Mueve un lead a la etapa "Cerrar Venta" (pago inminente confirmado).
+    Mueve un lead a la etapa "Cerrar Venta" (el cliente confirmó que avanza).
 
     Args:
         lead_id: ID del lead a mover.

@@ -1,8 +1,8 @@
 """
 Tool para mover un lead a la etapa "Lead Calificado" en Kommo.
-Se activa cuando el cliente muestra intención clara de compra:
-pide precio para adquirir, pregunta por métodos de pago, envío,
-garantías, plazos o cualquier detalle logístico/contractual.
+Se activa cuando el cliente muestra intención clara de alquilar:
+quiere un inmueble específico, pregunta por requisitos, documentación
+o garantías, o pide agendar una visita.
 Usa el endpoint PATCH /api/v4/leads/{id}
 Docs: https://developers.kommo.com/reference/updating-single-lead
 """

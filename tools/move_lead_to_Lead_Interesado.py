@@ -1,7 +1,7 @@
 """
 Tool para mover un lead a la etapa "Lead Interesado" en Kommo.
-Se activa cuando el cliente hace preguntas exploratorias sobre productos
-(sin mostrar intención clara de compra todavía).
+Se activa cuando el cliente explora o consulta (inmuebles, costos, políticas)
+sin mostrar intención clara de alquilar todavía.
 Usa el endpoint PATCH /api/v4/leads/{id}
 Docs: https://developers.kommo.com/reference/updating-single-lead
 """
