@@ -23,7 +23,7 @@ llama-index-llms-openai==0.7.9
 llama-index-vector-stores-qdrant==0.10.2   # integración Qdrant
 qdrant-client==1.18.0
 
-# Inventario de inmuebles (tool buscar_inmuebles) desde Google Sheets
+# Inventario de inmuebles (tool gsheets_buscar_inmuebles) desde Google Sheets
 gspread==6.2.1
 google-auth==2.56.0
 

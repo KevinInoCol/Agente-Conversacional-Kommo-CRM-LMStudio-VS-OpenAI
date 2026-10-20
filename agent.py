@@ -18,8 +18,8 @@ Arquitectura tool-calling:
 
 - `build_agent_for_lead(lead_id)` se llama por cada mensaje entrante. Construye
   un agente ligero (`create_agent`) con los 7 tools enlazados a ese lead_id:
-    1. knowledge_base (RAG de políticas/FAQ, compartido)
-    2. buscar_inmuebles (inventario en Google Sheets, compartido)
+    1. busqueda_en_base_conocimiento (RAG de políticas/FAQ, compartido)
+    2. gsheets_buscar_inmuebles (inventario en Google Sheets, compartido)
     3. move_to_Lead_Interesado
     4. move_to_Lead_Calificado
     5. move_to_Cerrar_Venta

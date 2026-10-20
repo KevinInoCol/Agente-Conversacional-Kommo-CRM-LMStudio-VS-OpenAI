@@ -1,10 +1,10 @@
 """
-Tool `buscar_inmuebles`: consulta el INVENTARIO de inmuebles disponibles desde un
+Tool `gsheets_buscar_inmuebles`: consulta el INVENTARIO de inmuebles disponibles desde un
 Google Sheets y lo expone como una tool de LangChain (`create_agent`).
 
-Es la ÚNICA fuente de verdad del inventario (a diferencia de `knowledge_base`,
+Es la ÚNICA fuente de verdad del inventario (a diferencia de `busqueda_en_base_conocimiento`,
 que cubre políticas/FAQ vía RAG). Es una tool COMPARTIDA entre todos los leads
-(no depende del lead_id), igual que `knowledge_base`.
+(no depende del lead_id), igual que `busqueda_en_base_conocimiento`.
 
 Acceso al Sheet
 ---------------
@@ -232,7 +232,7 @@ def _format_inmueble(inm: dict) -> str:
 
 def get_buscar_inmuebles_tool():
     """
-    Factory que devuelve la tool `buscar_inmuebles` de LangChain.
+    Factory que devuelve la tool `gsheets_buscar_inmuebles` de LangChain.
     Es una tool compartida (no depende del lead_id). Se construye una sola vez en
     `init_resources` (agent.py). Al invocarla se valida la conexión al Sheet.
     """
@@ -240,7 +240,7 @@ def get_buscar_inmuebles_tool():
     _get_worksheet()
 
     @tool
-    def buscar_inmuebles(
+    def gsheets_buscar_inmuebles(
         tipo: str = "",
         barrio: str = "",
         alquiler_max: float = 0,
@@ -288,4 +288,4 @@ def get_buscar_inmuebles_tool():
         cuerpo = "\n\n---\n\n".join(_format_inmueble(inm) for inm in recortados)
         return f"{cabecera}:\n\n{cuerpo}"
 
-    return buscar_inmuebles
+    return gsheets_buscar_inmuebles

@@ -44,16 +44,16 @@ def get_retrieval_tool(index, similarity_top_k: int = 5):
     retriever = index.as_retriever(similarity_top_k=similarity_top_k)
 
     @tool
-    def knowledge_base(query: str) -> str:
+    def busqueda_en_base_conocimiento(query: str) -> str:
         """Consulta las políticas y FAQ de la inmobiliaria Alpha State (alquiler en
         Campinas/SP): composición del boleto (alquiler neto, IPTU, SANASA, seguro de
         incendio, gastos bancarios), multas e intereses por atraso, reajuste anual,
         documentación y garantías para alquilar, responsabilidades de mantenimiento y
         cálculo de servicios compartidos. NO cubre el inventario de inmuebles (para eso
-        usa buscar_inmuebles). Argumento: 'query' = la pregunta o tema a buscar."""
+        usa gsheets_buscar_inmuebles). Argumento: 'query' = la pregunta o tema a buscar."""
         nodes = retriever.retrieve(query)
         if not nodes:
             return "No se encontró información relevante en el catálogo."
         return "\n\n---\n\n".join(n.node.get_content() for n in nodes)
 
-    return knowledge_base
+    return busqueda_en_base_conocimiento

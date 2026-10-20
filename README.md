@@ -83,7 +83,7 @@ El agente mueve el lead según la intención detectada en cada mensaje:
 | `Kommo Functions/kommo.py` | Cliente HTTP de Kommo (webhook, switch IA, update lead, salesbot). |
 | `RAG/rag.py` | Pipeline de ingesta a Qdrant (LlamaParse + embeddings). |
 | `vector_store.py` | Config compartida de Qdrant (fuente única para ingesta y consulta). |
-| `tools/` | RAG (`knowledge_base`), inventario (`buscar_inmuebles`) y tools de Kommo. |
+| `tools/` | RAG (`busqueda_en_base_conocimiento`), inventario (`gsheets_buscar_inmuebles`) y tools de Kommo. |
 | `chat_history/postgres_store.py` | Checkpointer de LangGraph (memoria por lead). |
 | `prompt/system_prompt.yaml` | System prompt (identidad + intenciones + flujos + reglas de tools). |
 | `model_config/model.yaml` | Config del LLM por proveedor. |
