@@ -38,7 +38,7 @@ Cliente (WhatsApp/canal) ─► Kommo ─► POST /webhook/kommo (app.py)
 | `RAG/rag.py` | Pipeline de ingesta (`python RAG/rag.py` para reindexar). |
 | `tools/retrieval.py` | Carga `LlamaCloudIndex` y lo envuelve como `QueryEngineTool` (`similarity_top_k=5`). |
 | `tools/move_lead_to_*.py` | 3 tools de etapa (Lead Interesado / Lead Calificado / Cerrar Venta). |
-| `tools/update_data_*.py` | 2 tools de custom fields (Marca de Interés, Método de Pago). |
+| `tools/update_data_*.py` | 5 tools de custom fields, una por campo (Tipo de Inmueble, Método de Pago, Rango Salarial, Metraje, Áreas Comunes). |
 | `tools/Tarea-send_notification_by_*.py` | Notificaciones (email / WhatsApp API). |
 | `procesamiento_de_audio/` | Nota de voz → texto. `procesador.py` (entrypoint), `descarga_audio.py` (CDN → temporal), `transcriptor.py` (Whisper). |
 | `chat_history/postgres_store.py` | `PostgresChatStore` compartido + `ChatMemoryBuffer` por lead. |
@@ -68,8 +68,9 @@ Validadas en `app.py:_validate_env()` (fail-fast):
 - APIs: `OPENAI_API_KEY`, `LLAMA_CLOUD_API_KEY`
 - Kommo: `KOMMO_SUBDOMAIN`, `KOMMO_ACCESS_TOKEN`, `KOMMO_PIPELINE_ID`,
   `KOMMO_LEAD_INTERESADO_STATUS_ID`, `KOMMO_LEAD_CALIFICADO_STATUS_ID`,
-  `KOMMO_LEAD_CERRAR_VENTA_STATUS_ID`, `KOMMO_MARCA_INTERES_FIELD_ID`,
-  `KOMMO_METODO_PAGO_FIELD_ID`
+  `KOMMO_LEAD_CERRAR_VENTA_STATUS_ID`, `KOMMO_TIPO_INMUEBLE_FIELD_ID`,
+  `KOMMO_METODO_PAGO_FIELD_ID`, `KOMMO_RANGO_SALARIAL_FIELD_ID`, `KOMMO_METRAJE_FIELD_ID`,
+  `KOMMO_AREAS_COMUNES_FIELD_ID`
 - DB: `DB_USER`, `DB_PASSWORD`, `DB_HOST` (opcional: `DB_PORT=5432`, `DB_NAME=postgres`)
 - Adicionales usadas por `kommo.py` (no validadas en startup, pero requeridas):
   `KOMMO_SWITCH_FIELD_ID`, `KOMMO_RESPONSE_FIELD_ID`, `KOMMO_SALESBOT_ID`

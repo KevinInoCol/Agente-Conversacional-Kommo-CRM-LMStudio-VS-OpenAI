@@ -17,14 +17,17 @@ Arquitectura tool-calling:
   recursos como singletons de módulo.
 
 - `build_agent_for_lead(lead_id)` se llama por cada mensaje entrante. Construye
-  un agente ligero (`create_agent`) con los 7 tools enlazados a ese lead_id:
+  un agente ligero (`create_agent`) con los 10 tools enlazados a ese lead_id:
     1. busqueda_en_base_conocimiento (RAG de políticas/FAQ, compartido)
     2. gsheets_buscar_inmuebles (inventario en Google Sheets, compartido)
     3. move_to_Lead_Interesado
     4. move_to_Lead_Calificado
     5. move_to_Cerrar_Venta
-    6. update_Marca_de_Interes
+    6. update_Tipo_de_Inmueble
     7. update_Metodo_de_Pago
+    8. update_Rango_Salarial
+    9. update_Metraje
+    10. update_Areas_Comunes
   El agente DECIDE cuándo invocar cada tool según el contexto. La memoria por
   lead se logra pasando `thread_id=lead_id` al invocar el agente (lo hace app.py).
 """
@@ -43,8 +46,11 @@ from tools.buscar_inmuebles import get_buscar_inmuebles_tool
 from tools.move_lead_to_Lead_Interesado import get_move_to_Lead_Interesado_tool
 from tools.move_lead_to_Lead_Calificado import get_move_to_Lead_Calificado_tool
 from tools.move_lead_to_Cerrar_Venta import get_move_to_Cerrar_Venta_tool
-from tools.update_data_Marca_de_Interes import get_update_Marca_de_Interes_tool
+from tools.update_data_Tipo_de_Inmueble import get_update_Tipo_de_Inmueble_tool
 from tools.update_data_Metodo_de_Pago import get_update_Metodo_de_Pago_tool
+from tools.update_data_Rango_Salarial import get_update_Rango_Salarial_tool
+from tools.update_data_Metraje import get_update_Metraje_tool
+from tools.update_data_Areas_Comunes import get_update_Areas_Comunes_tool
 
 # ──────────────────────────────────────────────
 # 0. CARGA DE CONFIGURACIÓN MODULAR
@@ -192,8 +198,11 @@ def build_agent_for_lead(lead_id: int):
         get_move_to_Lead_Interesado_tool(lead_id),
         get_move_to_Lead_Calificado_tool(lead_id),
         get_move_to_Cerrar_Venta_tool(lead_id),
-        get_update_Marca_de_Interes_tool(lead_id),
+        get_update_Tipo_de_Inmueble_tool(lead_id),
         get_update_Metodo_de_Pago_tool(lead_id),
+        get_update_Rango_Salarial_tool(lead_id),
+        get_update_Metraje_tool(lead_id),
+        get_update_Areas_Comunes_tool(lead_id),
     ]
 
     # Pattern from: docs.langchain.com/oss/python/langchain/agents

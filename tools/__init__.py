@@ -21,13 +21,25 @@ from .move_lead_to_Cerrar_Venta import (
     move_lead_to_Cerrar_Venta,
     get_move_to_Cerrar_Venta_tool,
 )
-from .update_data_Marca_de_Interes import (
-    update_data_Marca_de_Interes,
-    get_update_Marca_de_Interes_tool,
+from .update_data_Tipo_de_Inmueble import (
+    update_data_Tipo_de_Inmueble,
+    get_update_Tipo_de_Inmueble_tool,
 )
 from .update_data_Metodo_de_Pago import (
     update_data_Metodo_de_Pago,
     get_update_Metodo_de_Pago_tool,
+)
+from .update_data_Rango_Salarial import (
+    update_data_Rango_Salarial,
+    get_update_Rango_Salarial_tool,
+)
+from .update_data_Metraje import (
+    update_data_Metraje,
+    get_update_Metraje_tool,
+)
+from .update_data_Areas_Comunes import (
+    update_data_Areas_Comunes,
+    get_update_Areas_Comunes_tool,
 )
 
 __all__ = [
@@ -37,11 +49,17 @@ __all__ = [
     "move_lead_to_Lead_Interesado",
     "move_lead_to_Lead_Calificado",
     "move_lead_to_Cerrar_Venta",
-    "update_data_Marca_de_Interes",
+    "update_data_Tipo_de_Inmueble",
     "update_data_Metodo_de_Pago",
+    "update_data_Rango_Salarial",
+    "update_data_Metraje",
+    "update_data_Areas_Comunes",
     "get_move_to_Lead_Interesado_tool",
     "get_move_to_Lead_Calificado_tool",
     "get_move_to_Cerrar_Venta_tool",
-    "get_update_Marca_de_Interes_tool",
+    "get_update_Tipo_de_Inmueble_tool",
     "get_update_Metodo_de_Pago_tool",
+    "get_update_Rango_Salarial_tool",
+    "get_update_Metraje_tool",
+    "get_update_Areas_Comunes_tool",
 ]
